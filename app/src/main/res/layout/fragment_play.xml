@@ -3,24 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/color_on_primary">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="5dp"
-        android:background="@color/black">
+        android:layout_margin="5dp">
 
         <TextView
             android:id="@+id/score"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="0dp"
             android:text="18"
-            android:textColor="@color/white"
+            android:textColor="@color/color_text_negative"
+            android:background="@color/color_on_secondary"
             android:textSize="18sp"
+            android:gravity="center"
+            android:layout_marginBottom="5dp"
             app:layout_constraintBottom_toTopOf="@id/snake_surface"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHeight_percent="0.05"
+            app:layout_constraintWidth_percent="0.2"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.025" />
@@ -39,7 +42,7 @@
             android:id="@+id/controls"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@color/black"
+            android:background="@color/color_on_primary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHeight_percent="0.15"
@@ -50,41 +53,53 @@
                 android:id="@+id/left"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:background="@color/color_on_secondary"
+                android:src="@drawable/left_arrow"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="5dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_percent="0.25" />
+                app:layout_constraintEnd_toStartOf="@id/top" />
 
             <ImageButton
                 android:id="@+id/top"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
+                android:background="@color/color_on_secondary"
+                android:src="@drawable/up_arrow"
+                android:layout_marginVertical="5dp"
                 app:layout_constraintBottom_toTopOf="@id/bottom"
                 app:layout_constraintEnd_toStartOf="@id/right"
-                app:layout_constraintHeight_percent="0.5"
                 app:layout_constraintStart_toEndOf="@id/left"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_percent="0.5" />
+                app:layout_constraintWidth_percent="0.45" />
 
             <ImageButton
                 android:id="@+id/bottom"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
+                android:background="@color/color_on_secondary"
+                android:src="@drawable/down_arrow"
+                android:layout_marginStart="5dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/right"
-                app:layout_constraintHeight_percent="0.5"
                 app:layout_constraintStart_toEndOf="@id/left"
                 app:layout_constraintTop_toBottomOf="@id/top"
-                app:layout_constraintWidth_percent="0.5" />
+                app:layout_constraintWidth_percent="0.45" />
 
             <ImageButton
                 android:id="@+id/right"
                 android:layout_width="0dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginStart="5dp"
+                android:src="@drawable/right_arrow"
                 android:layout_height="match_parent"
+                android:background="@color/color_on_secondary"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_percent="0.25" />
+                app:layout_constraintStart_toEndOf="@id/top"
+                app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
