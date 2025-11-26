@@ -14,7 +14,6 @@
             android:id="@+id/score"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:text="18"
             android:textColor="@color/color_text_negative"
             android:background="@color/color_on_secondary"
             android:textSize="18sp"
