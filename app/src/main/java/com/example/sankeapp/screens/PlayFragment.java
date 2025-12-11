@@ -22,13 +22,13 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.sankeapp.R;
 import com.example.sankeapp.databinding.FragmentPlayBinding;
 import com.example.sankeapp.utils.Coordinates;
 import com.example.sankeapp.utils.MovingPositions;
-import com.example.sankeapp.utils.SnakeCompozition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +53,9 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
     private Coordinates headCoordinates;
     private Timer timer;
     private Canvas canvas = null;
-    private Paint pointColor = null;
+    private Paint headPaint;
+    private Paint bodyPaint;
+    private Paint foodPaint;
 
 
     @Nullable
@@ -68,6 +70,7 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
         super.onViewCreated(view, savedInstanceState);
 
         initiateUI();
+        initPaints();
         setListeners();
     }
 
@@ -80,13 +83,29 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
         rightButton = binding.right;
     }
 
-    /// TO DO
     private void setListeners() {
         surfaceView.getHolder().addCallback(this);
         upButton.setOnClickListener(getListener(MovingPositions.TOP, MovingPositions.DOWN));
         downButton.setOnClickListener(getListener(MovingPositions.DOWN, MovingPositions.TOP));
         leftButton.setOnClickListener(getListener(MovingPositions.LEFT, MovingPositions.RIGHT));
         rightButton.setOnClickListener(getListener(MovingPositions.RIGHT, MovingPositions.LEFT));
+    }
+
+    private void initPaints(){
+        headPaint = new Paint();
+        headPaint.setStyle(Paint.Style.FILL);
+        headPaint.setAntiAlias(true);
+        headPaint.setColor(ContextCompat.getColor(requireContext(), R.color.color_on_tertiary));
+
+        bodyPaint = new Paint();
+        bodyPaint.setStyle(Paint.Style.FILL);
+        bodyPaint.setAntiAlias(true);
+        bodyPaint.setColor(ContextCompat.getColor(requireContext(), R.color.color_on_secondary));
+
+        foodPaint = new Paint();
+        foodPaint.setStyle(Paint.Style.FILL);
+        foodPaint.setAntiAlias(true);
+        foodPaint.setColor(ContextCompat.getColor(requireContext(), R.color.color_on_quartery));
     }
 
     private View.OnClickListener getListener(MovingPositions desiredPosition, MovingPositions forbiddenPosition) {
@@ -128,14 +147,14 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
         randomCoordinates.setPositionY(new Random().nextInt(surfaceHeight / POINTSIZE));
 
         if (randomCoordinates.getPositionX() % 2 != 0) {
-            randomCoordinates.getPositionX()++;
+            randomCoordinates.increaseCoordinateX();
         }
         if (randomCoordinates.getPositionY() % 2 != 0) {
-            randomCoordinates.getPositionY()++;
+            randomCoordinates.increaseCoordinateY();
         }
 
-        pointCoordinates.getPositionX() = (randomCoordinates.getPositionX() + 1) * POINTSIZE;
-        pointCoordinates.getPositionY() = (randomCoordinates.getPositionY() + 1) * POINTSIZE;
+        pointCoordinates.setPositionX((randomCoordinates.getPositionX() + 1) * POINTSIZE);
+        pointCoordinates.setPositionY((randomCoordinates.getPositionY() + 1) * POINTSIZE);
 
     }
 
@@ -145,8 +164,8 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
             @Override
             public void run() {
 
-                headCoordinates.getPositionX() = snakeCompozitionList.get(0).getPositionX();
-                headCoordinates.getPositionY() = snakeCompozitionList.get(0).getPositionY();
+                headCoordinates.setPositionX(snakeCompozitionList.get(0).getPositionX());
+                headCoordinates.setPositionY(snakeCompozitionList.get(0).getPositionY());
 
                 switch (movingPosition) {
                     case RIGHT:
@@ -167,8 +186,8 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
                         break;
                 }
 
-                headCoordinates.getPositionX() = snakeCompozitionList.get(0).getPositionX();
-                headCoordinates.getPositionY() = snakeCompozitionList.get(0).getPositionY();
+                headCoordinates.setPositionX(snakeCompozitionList.get(0).getPositionX());
+                headCoordinates.setPositionY(snakeCompozitionList.get(0).getPositionY());
 
                 if (headCoordinates.getPositionX() == pointCoordinates.getPositionX() &&
                         headCoordinates.getPositionY() == pointCoordinates.getPositionY()) {
@@ -195,13 +214,13 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
                     requireActivity().runOnUiThread(builder::show);
                 } else {
                     canvas = surfaceHolder.lockCanvas();
-                    canvas.drawColor(Color.WHITE, PorterDuff.Mode.CLEAR);
+                    canvas.drawColor(ContextCompat.getColor(requireContext(), R.color.color_on_primary));
                     /// snake draw
                     canvas.drawCircle(
                             snakeCompozitionList.get(0).getPositionX(),
                             snakeCompozitionList.get(0).getPositionY(),
                             POINTSIZE,
-                            createPaintColor()
+                            headPaint
                     );
 
                     /// food draw
@@ -209,7 +228,7 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
                             pointCoordinates.getPositionX(),
                             pointCoordinates.getPositionY(),
                             POINTSIZE,
-                            createPaintColor()
+                            foodPaint
                     );
 
                     /// Move body parts: from tail → previous segment
@@ -219,12 +238,13 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
                     }
 
                     /// Draw body
-                    for (Coordinates coordinates : snakeCompozitionList) {
+                    for (int i = 1; i < snakeCompozitionList.size(); i++) {
+                        Coordinates coordinates = snakeCompozitionList.get(i);
                         canvas.drawCircle(
                                 coordinates.getPositionX(),
                                 coordinates.getPositionY(),
                                 POINTSIZE,
-                                createPaintColor()
+                                bodyPaint
                         );
                     }
 
@@ -265,16 +285,6 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
 
 
         return gameOver;
-    }
-
-    private Paint createPaintColor() {
-        if (pointColor == null) {
-            pointColor = new Paint();
-            pointColor.setColor(getResources().getColor(R.color.color_on_tertiary));
-            pointColor.setStyle(Paint.Style.FILL);
-            pointColor.setAntiAlias(true);
-        }
-        return pointColor;
     }
 
     @Override

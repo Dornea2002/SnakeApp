@@ -4,6 +4,6 @@
     <color name="color_on_secondary">#F5C857</color>
     <color name="color_on_tertiary">#E2852E</color>
     <color name="color_on_quartery">#ABE0F0</color>
-    <color name="color_text">#FFFFFF</color>
+    <color name="color_background">#FFFFFF</color>
     <color name="color_text_negative">#000000</color>
 </resources>

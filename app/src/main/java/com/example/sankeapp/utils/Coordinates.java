@@ -28,6 +28,14 @@ public class Coordinates {
         this.positionY = positionY;
     }
 
+    public void increaseCoordinateX(){
+        this.positionX ++;
+    }
+
+    public void increaseCoordinateY(){
+        this.positionY ++;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
