@@ -14,19 +14,50 @@
             android:id="@+id/score"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:textColor="@color/color_text_negative"
+            android:layout_marginBottom="5dp"
             android:background="@color/color_on_secondary"
-            android:textSize="24sp"
             android:gravity="center"
             android:text="18"
-            android:layout_marginBottom="5dp"
+            android:textColor="@color/color_text_negative"
+            android:textSize="24sp"
             app:layout_constraintBottom_toTopOf="@id/snake_surface"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHeight_percent="0.05"
-            app:layout_constraintWidth_percent="0.2"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.025" />
+            app:layout_constraintVertical_bias="0.025"
+            app:layout_constraintWidth_percent="0.2" />
+
+        <ImageButton
+            android:id="@+id/play_pause_button"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@color/color_background"
+            android:src="@drawable/icon_pause"
+            app:layout_constraintBottom_toBottomOf="@id/score"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/score"
+            app:layout_constraintTop_toTopOf="@id/score"
+            app:layout_constraintWidth_percent="0.1" />
+
+        <TextView
+            android:id="@+id/pause_text"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="PAUSED"
+            android:gravity="center"
+            android:textSize="64sp"
+            android:visibility="gone"
+            android:elevation="10dp"
+            android:background="@drawable/opacity_rounded_corners_button"
+            app:layout_constraintBottom_toBottomOf="@id/snake_surface"
+            app:layout_constraintEnd_toEndOf="@id/snake_surface"
+            app:layout_constraintStart_toStartOf="@id/snake_surface"
+            app:layout_constraintTop_toTopOf="@id/snake_surface"
+            app:layout_constraintHeight_percent="0.5"
+            app:layout_constraintWidth_percent="0.6" />
+
 
         <SurfaceView
             android:id="@+id/snake_surface"
@@ -52,24 +83,24 @@
 
             <ImageButton
                 android:id="@+id/left"
+                style="@style/Theme.SankeApp.ImageButton"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                style="@style/Theme.SankeApp.ImageButton"
-                android:src="@drawable/left_arrow"
                 android:layout_marginTop="5dp"
                 android:layout_marginEnd="5dp"
+                android:src="@drawable/left_arrow"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/top"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/top" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
                 android:id="@+id/top"
+                style="@style/Theme.SankeApp.ImageButton"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                style="@style/Theme.SankeApp.ImageButton"
-                android:src="@drawable/up_arrow"
                 android:layout_marginVertical="5dp"
+                android:src="@drawable/up_arrow"
                 app:layout_constraintBottom_toTopOf="@id/bottom"
                 app:layout_constraintEnd_toStartOf="@id/right"
                 app:layout_constraintStart_toEndOf="@id/left"
@@ -78,11 +109,11 @@
 
             <ImageButton
                 android:id="@+id/bottom"
+                style="@style/Theme.SankeApp.ImageButton"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                style="@style/Theme.SankeApp.ImageButton"
-                android:src="@drawable/down_arrow"
                 android:layout_marginStart="5dp"
+                android:src="@drawable/down_arrow"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/right"
                 app:layout_constraintStart_toEndOf="@id/left"
@@ -91,12 +122,12 @@
 
             <ImageButton
                 android:id="@+id/right"
-                android:layout_width="0dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginStart="5dp"
-                android:src="@drawable/right_arrow"
-                android:layout_height="match_parent"
                 style="@style/Theme.SankeApp.ImageButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="5dp"
+                android:src="@drawable/right_arrow"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/top"

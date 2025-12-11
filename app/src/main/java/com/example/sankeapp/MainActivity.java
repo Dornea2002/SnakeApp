@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.sankeapp.screens.PlayFragment;
+import com.example.sankeapp.screens.fragments.PlayFragment;
 
 public class MainActivity extends AppCompatActivity {
 

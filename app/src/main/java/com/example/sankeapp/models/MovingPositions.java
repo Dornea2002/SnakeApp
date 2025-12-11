@@ -1,4 +1,4 @@
-package com.example.sankeapp.utils;
+package com.example.sankeapp.models;
 
 public enum MovingPositions {
     RIGHT,
