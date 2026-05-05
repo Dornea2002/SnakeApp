@@ -1,57 +1,86 @@
 package com.example.sankeapp.utils;
 
-import static com.example.sankeapp.utils.Constants.POINTSIZE;
+import static com.example.sankeapp.utils.Constants.CELL_SIZE;
+import static com.example.sankeapp.utils.Constants.DEFAULTSNAKESIZE;
 
 import com.example.sankeapp.models.MovingPositions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SnakeLogic {
 
-    public static void moveHead(List<Coordinates> snakeCompozitionList, Coordinates headCoordinates, MovingPositions movingPosition) {
-        switch (movingPosition) {
+    public static List<Coordinates> move(List<Coordinates> snake, MovingPositions direction) {
+        List<Coordinates> newSnake = new ArrayList<>();
+
+        Coordinates head = snake.get(0);
+        Coordinates newHead = new Coordinates(
+                head.getPositionX(),
+                head.getPositionY()
+        );
+
+        switch (direction) {
             case RIGHT:
-                snakeCompozitionList.get(0).setPositionX(headCoordinates.getPositionX() + (POINTSIZE * 2));
+                newHead.setPositionX(head.getPositionX() + CELL_SIZE);
                 break;
             case LEFT:
-                snakeCompozitionList.get(0).setPositionX(headCoordinates.getPositionX() - (POINTSIZE * 2));
+                newHead.setPositionX(head.getPositionX() - CELL_SIZE);
                 break;
             case TOP:
-                snakeCompozitionList.get(0).setPositionY(headCoordinates.getPositionY() - (POINTSIZE * 2));
+                newHead.setPositionY(head.getPositionY() - CELL_SIZE);
                 break;
             case DOWN:
-                snakeCompozitionList.get(0).setPositionY(headCoordinates.getPositionY() + (POINTSIZE * 2));
+                newHead.setPositionY(head.getPositionY() + CELL_SIZE);
                 break;
         }
-    }
+        newSnake.add(newHead);
 
-    public static void moveBody(List<Coordinates> snakeCompozitionList) {
-        for (int i = snakeCompozitionList.size() - 1; i > 0; i--) {
-            snakeCompozitionList.get(i).setPositionX(snakeCompozitionList.get(i - 1).getPositionX());
-            snakeCompozitionList.get(i).setPositionY(snakeCompozitionList.get(i - 1).getPositionY());
+        for (int i = 0; i < snake.size() - 1; i++) {
+            Coordinates c = snake.get(i);
+            newSnake.add(new Coordinates(c.getPositionX(), c.getPositionY()));
         }
+        return newSnake;
     }
 
-    public static void growSnake(List<Coordinates> snakeCompozitionList) {
-        Coordinates tail = snakeCompozitionList.get(snakeCompozitionList.size() - 1);
-        snakeCompozitionList.add(new Coordinates(tail.getPositionX(), tail.getPositionY()));
-    }
-
-    public static boolean isCollided(List<Coordinates> snakeCompozitionList, int surfaceWidth, int surfaceHeight) {
-
-        if (snakeCompozitionList.get(0).getPositionX() < 0 ||
-                snakeCompozitionList.get(0).getPositionY() < 0 ||
-                snakeCompozitionList.get(0).getPositionX() >= surfaceWidth ||
-                snakeCompozitionList.get(0).getPositionY() >= surfaceHeight) {
+    public static boolean isCollision(List<Coordinates> snake, int w, int h) {
+        Coordinates head = snake.get(0);
+        if (head.getPositionX() < 0 || head.getPositionY() < 0 ||
+                head.getPositionX() >=  w || head.getPositionY() >= h) {
             return true;
-        } else {
-            for (int i = 1; i < snakeCompozitionList.size(); i++) {
-                if (snakeCompozitionList.get(0).getPositionX() == snakeCompozitionList.get(i).getPositionX() &&
-                        snakeCompozitionList.get(0).getPositionY() == snakeCompozitionList.get(i).getPositionY()) {
-                    return true;
-                }
+        }
+
+        for (int i = 1; i < snake.size(); i++) {
+            if (head.getPositionX() == snake.get(i).getPositionX() &&
+                    head.getPositionY() == snake.get(i).getPositionY()) {
+                return true;
             }
         }
+
         return false;
+    }
+
+    public static boolean isEating(Coordinates head, Coordinates food) {
+        return head.getPositionX() == food.getPositionX() &&
+                head.getPositionY() == food.getPositionY();
+    }
+
+    public static List<Coordinates> growSnake(List<Coordinates> snakeCompozitionList) {
+        Coordinates tail = snakeCompozitionList.get(snakeCompozitionList.size() - 1);
+
+        List<Coordinates> snakeList = new ArrayList<>(snakeCompozitionList);
+        snakeList.add(new Coordinates(tail.getPositionX(), tail.getPositionY()));
+        return snakeList;
+    }
+
+    public static List<Coordinates> createInitialSnake() {
+        List<Coordinates> snakeInitialCoordinates = new ArrayList<>();
+        int startPositionX = CELL_SIZE * DEFAULTSNAKESIZE;
+
+        for (int i = 0; i <= DEFAULTSNAKESIZE; i++) {
+            Coordinates snakeCoordinates = new Coordinates(startPositionX, CELL_SIZE);
+            snakeInitialCoordinates.add(snakeCoordinates);
+            startPositionX -= (CELL_SIZE);
+        }
+        return snakeInitialCoordinates;
     }
 }

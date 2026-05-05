@@ -1,7 +1,5 @@
 package com.example.sankeapp.screens.fragments;
 
-import static com.example.sankeapp.utils.Constants.DEFAULTSNAKESIZE;
-import static com.example.sankeapp.utils.Constants.DEFAULTSNAKESPEED;
 import static com.example.sankeapp.utils.Constants.POINTSIZE;
 
 import android.app.AlertDialog;
@@ -21,18 +19,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.sankeapp.R;
 import com.example.sankeapp.databinding.FragmentPlayBinding;
+import com.example.sankeapp.screens.viewmodels.PlayFragmentViewModel;
 import com.example.sankeapp.utils.Coordinates;
 import com.example.sankeapp.models.MovingPositions;
-import com.example.sankeapp.utils.Food;
-import com.example.sankeapp.utils.SnakeLogic;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
 
@@ -45,17 +41,13 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
     private ImageButton leftButton;
     private ImageButton rightButton;
     private ImageButton playPauseButton;
-    private MovingPositions movingPosition = MovingPositions.RIGHT;
-    private List<Coordinates> snakeCompozitionList = new ArrayList<>();
-    private int computingScore;
-    private Coordinates pointCoordinates;
-    private Coordinates headCoordinates;
     private Timer timer;
-    private Canvas canvas = null;
     private Paint headPaint;
     private Paint bodyPaint;
     private Paint foodPaint;
     private boolean isPaused = false;
+    private PlayFragmentViewModel playFragmentViewModel;
+    private static final String TAG = PlayFragment.class.getCanonicalName();
 
 
     @Nullable
@@ -68,10 +60,12 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        playFragmentViewModel = new ViewModelProvider(this).get(PlayFragmentViewModel.class);
 
         initiateUI();
         initPaints();
         setListeners();
+        setObservers();
     }
 
     private void initiateUI() {
@@ -86,11 +80,29 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
 
     private void setListeners() {
         surfaceView.getHolder().addCallback(this);
-        upButton.setOnClickListener(getListener(MovingPositions.TOP, MovingPositions.DOWN));
-        downButton.setOnClickListener(getListener(MovingPositions.DOWN, MovingPositions.TOP));
-        leftButton.setOnClickListener(getListener(MovingPositions.LEFT, MovingPositions.RIGHT));
-        rightButton.setOnClickListener(getListener(MovingPositions.RIGHT, MovingPositions.LEFT));
+        upButton.setOnClickListener(getListener(MovingPositions.TOP));
+        downButton.setOnClickListener(getListener(MovingPositions.DOWN));
+        leftButton.setOnClickListener(getListener(MovingPositions.LEFT));
+        rightButton.setOnClickListener(getListener(MovingPositions.RIGHT));
         playPauseButton.setOnClickListener(v -> togglePlayPause());
+    }
+
+    private void setObservers() {
+        playFragmentViewModel.getComputingScoreMutableLiveData().observe(getViewLifecycleOwner(),
+                integer -> requireActivity().runOnUiThread(() -> score.setText(String.valueOf(integer)))
+        );
+
+        playFragmentViewModel.getSnakeCompositionList().observe(getViewLifecycleOwner(),
+                newSnakeCompositionList -> draw());
+
+        playFragmentViewModel.getFood().observe(getViewLifecycleOwner(),
+                food -> draw());
+
+        playFragmentViewModel.getGameOver().observe(getViewLifecycleOwner(),
+                isGameOver -> {
+                    if (isGameOver)
+                        showGameOverDialog();
+                });
     }
 
     private void initPaints() {
@@ -110,133 +122,74 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
         foodPaint.setColor(ContextCompat.getColor(requireContext(), R.color.color_on_quartery));
     }
 
-    private View.OnClickListener getListener(MovingPositions desiredPosition, MovingPositions forbiddenPosition) {
-        return view -> {
-            if (!movingPosition.equals(forbiddenPosition)) {
-                movingPosition = desiredPosition;
-            }
-        };
-    }
+    private void draw() {
+        List<Coordinates> snake = playFragmentViewModel.getSnakeCompositionList().getValue();
+        Coordinates food = playFragmentViewModel.getFood().getValue();
 
-    private void initializeSurface() {
-        snakeCompozitionList.clear();
-        score.setText("0");
-        computingScore = 0;
-        movingPosition = MovingPositions.RIGHT;
-
-        int startPositionX = POINTSIZE * DEFAULTSNAKESIZE;
-        for (int i = 0; i <= DEFAULTSNAKESIZE; i++) {
-            Coordinates snakeCoordinates = new Coordinates(startPositionX, POINTSIZE);
-            snakeCompozitionList.add(snakeCoordinates);
-
-            startPositionX -= (POINTSIZE * 2);
+        if (snake == null || snake.isEmpty() || food == null || surfaceHolder == null) {
+            return;
         }
 
-        pointCoordinates = new Coordinates();
-        headCoordinates = new Coordinates();
+        Canvas canvas = surfaceHolder.lockCanvas();
+        if (canvas == null)
+            return;
+        canvas.drawColor(ContextCompat.getColor(requireContext(), R.color.color_on_primary));
 
-        placeRandomPoint();
+        ///FOOD
+        canvas.drawCircle(
+                food.getPositionX(),
+                food.getPositionY(),
+                POINTSIZE,
+                foodPaint
+        );
 
-        moveSnake();
+        /// BODY
+        for (int i = 1; i < snake.size(); i++) {
+            Coordinates cell = snake.get(i);
+            canvas.drawCircle(
+                    cell.getPositionX(),
+                    cell.getPositionY(),
+                    POINTSIZE,
+                    bodyPaint
+            );
+        }
+
+        ///HEAD
+        Coordinates head = snake.get(0);
+        canvas.drawCircle(
+                head.getPositionX(),
+                head.getPositionY(),
+                POINTSIZE,
+                headPaint
+        );
+
+        surfaceHolder.unlockCanvasAndPost(canvas);
     }
 
-    private void placeRandomPoint() {
-        int surfaceWidth = surfaceView.getWidth() - (POINTSIZE * 2);
-        int surfaceHeight = surfaceView.getHeight() - (POINTSIZE * 2);
-
-        Coordinates randomCoordinates = Food.getRandomFood(surfaceWidth, surfaceHeight);
-
-        pointCoordinates.setPositionX((randomCoordinates.getPositionX() + 1) * POINTSIZE);
-        pointCoordinates.setPositionY((randomCoordinates.getPositionY() + 1) * POINTSIZE);
-
+    private void showGameOverDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("GAME OVER")
+                .setMessage("Score: " + score.getText())
+                .setCancelable(false)
+                .setPositiveButton("Restart", (d, w) -> playFragmentViewModel.startGame(
+                        surfaceView.getWidth(),
+                        surfaceView.getHeight()
+                ))
+                .show();
     }
 
-    private void moveSnake() {
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-
-                headCoordinates.setPositionX(snakeCompozitionList.get(0).getPositionX());
-                headCoordinates.setPositionY(snakeCompozitionList.get(0).getPositionY());
-
-                SnakeLogic.moveHead(snakeCompozitionList, headCoordinates, movingPosition);
-
-
-                headCoordinates.setPositionX(snakeCompozitionList.get(0).getPositionX());
-                headCoordinates.setPositionY(snakeCompozitionList.get(0).getPositionY());
-
-                if (headCoordinates.getPositionX() == pointCoordinates.getPositionX() &&
-                        headCoordinates.getPositionY() == pointCoordinates.getPositionY()) {
-                    growSnake();
-                    placeRandomPoint();
-                    Log.d("here", "GROW");
-                }
-
-                if (SnakeLogic.isCollided(snakeCompozitionList, surfaceView.getWidth(), surfaceView.getHeight())) {
-                    timer.purge();
-                    timer.cancel();
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-                    builder.setMessage("You score " + score.getText() + " points!");
-                    builder.setTitle("GAME OVER");
-                    builder.setCancelable(false);
-                    builder.setPositiveButton("Start Again", (dialog, which) -> initializeSurface());
-
-                    requireActivity().runOnUiThread(builder::show);
-                } else {
-                    canvas = surfaceHolder.lockCanvas();
-                    canvas.drawColor(ContextCompat.getColor(requireContext(), R.color.color_on_primary));
-
-                    /// Move body parts: from tail → previous segment
-                    SnakeLogic.moveBody(snakeCompozitionList);
-
-                    /// food draw
-                    canvas.drawCircle(
-                            pointCoordinates.getPositionX(),
-                            pointCoordinates.getPositionY(),
-                            POINTSIZE,
-                            foodPaint
-                    );
-
-                    /// Draw body
-                    for (int i = 1; i < snakeCompozitionList.size(); i++) {
-                        Coordinates coordinates = snakeCompozitionList.get(i);
-                        canvas.drawCircle(
-                                coordinates.getPositionX(),
-                                coordinates.getPositionY(),
-                                POINTSIZE,
-                                bodyPaint
-                        );
-                    }
-
-                    /// head draw
-                    canvas.drawCircle(
-                            snakeCompozitionList.get(0).getPositionX(),
-                            snakeCompozitionList.get(0).getPositionY(),
-                            POINTSIZE,
-                            headPaint
-                    );
-
-                    surfaceHolder.unlockCanvasAndPost(canvas);
-
-                }
-
-            }
-        }, 1000 - DEFAULTSNAKESPEED, 1000 - DEFAULTSNAKESPEED);
-    }
-
-    private void growSnake() {
-        SnakeLogic.growSnake(snakeCompozitionList);
-        computingScore+=10;
-        requireActivity().runOnUiThread(() -> score.setText(String.valueOf(computingScore)));
+    private View.OnClickListener getListener(MovingPositions desiredPosition) {
+        return view -> playFragmentViewModel.setMovingPosition(desiredPosition);
     }
 
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
 
-        initializeSurface();
+        playFragmentViewModel.startGame(
+                surfaceView.getWidth(),
+                surfaceView.getHeight()
+        );
     }
 
     @Override
@@ -253,27 +206,26 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
     }
 
     private void togglePlayPause() {
+        Log.d(TAG, "Here in toggle");
         if (isPaused) {
             isPaused = false;
             playPauseButton.setImageResource(R.drawable.icon_pause);
             binding.pauseText.setVisibility(View.GONE);
-            resumeGame();
+            playFragmentViewModel.resumeGame(
+                    surfaceView.getWidth(),
+                    surfaceView.getHeight()
+            );
         } else {
             isPaused = true;
             playPauseButton.setImageResource(R.drawable.icon_play);
             binding.pauseText.setVisibility(View.VISIBLE);
-            pauseGame();
+            playFragmentViewModel.pauseGame();
         }
     }
 
-    private void pauseGame() {
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
-        }
-    }
-
-    private void resumeGame() {
-        moveSnake();
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        playFragmentViewModel.stop();
     }
 }
