@@ -26,6 +26,7 @@ import com.example.sankeapp.databinding.FragmentPlayBinding;
 import com.example.sankeapp.screens.viewmodels.PlayFragmentViewModel;
 import com.example.sankeapp.utils.Coordinates;
 import com.example.sankeapp.models.MovingPositions;
+import com.example.sankeapp.utils.Time;
 
 import java.util.List;
 import java.util.Timer;
@@ -33,7 +34,9 @@ import java.util.Timer;
 public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
 
     private FragmentPlayBinding binding;
+    private TextView chronometer;
     private TextView score;
+    private TextView food;
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
     private ImageButton upButton;
@@ -49,7 +52,6 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
     private PlayFragmentViewModel playFragmentViewModel;
     private static final String TAG = PlayFragment.class.getCanonicalName();
 
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -62,20 +64,29 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
         super.onViewCreated(view, savedInstanceState);
         playFragmentViewModel = new ViewModelProvider(this).get(PlayFragmentViewModel.class);
 
+        bindUI();
         initiateUI();
         initPaints();
         setListeners();
         setObservers();
     }
 
-    private void initiateUI() {
+    private void bindUI() {
+        chronometer = binding.chronometer;
         score = binding.score;
+        food = binding.food;
         surfaceView = binding.snakeSurface;
         upButton = binding.top;
         downButton = binding.bottom;
         leftButton = binding.left;
         rightButton = binding.right;
         playPauseButton = binding.playPauseButton;
+    }
+
+    private void initiateUI() {
+        score.setText(getString(R.string.initial_score_value));
+        food.setText(getString(R.string.initial_score_value));
+        chronometer.setText(getString(R.string.initial_time_value));
     }
 
     private void setListeners() {
@@ -88,6 +99,11 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
     }
 
     private void setObservers() {
+        playFragmentViewModel.getChronometerLiveData().observe(getViewLifecycleOwner(),
+                this::updateTime);
+        playFragmentViewModel.getEatenFoodCounterMutableLiveData().observe(getViewLifecycleOwner(),
+                integer -> requireActivity().runOnUiThread(() -> food.setText(String.valueOf(integer)))
+        );
         playFragmentViewModel.getComputingScoreMutableLiveData().observe(getViewLifecycleOwner(),
                 integer -> requireActivity().runOnUiThread(() -> score.setText(String.valueOf(integer)))
         );
@@ -120,6 +136,16 @@ public class PlayFragment extends Fragment implements SurfaceHolder.Callback {
         foodPaint.setStyle(Paint.Style.FILL);
         foodPaint.setAntiAlias(true);
         foodPaint.setColor(ContextCompat.getColor(requireContext(), R.color.color_on_quartery));
+    }
+
+    private void updateTime(Time time) {
+        String m = time.getMinutes() < 10 ?
+                "0" + time.getMinutes() :
+                "" + time.getMinutes();
+        String s = time.getSeconds() < 10 ?
+                "0" + time.getSeconds() :
+                "" + time.getSeconds();
+        chronometer.setText(String.format("%s:%s", m, s));
     }
 
     private void draw() {

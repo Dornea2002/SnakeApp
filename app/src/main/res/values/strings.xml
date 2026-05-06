@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">sankeApp</string>
+    <string name="initial_score_value">0</string>
+    <string name="initial_time_value">00:00</string>
+    <string name="pause">PAUSE</string>
+    <string name="content_description">content</string>
 </resources>
